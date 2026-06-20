@@ -1,0 +1,124 @@
+{
+  "name": "Data cleanig workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "18be6DjmI3lU6SRDi6EL-OF5tchX0_qrffz2F6Mt_L8o",
+          "mode": "list",
+          "cachedResultName": "code node",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18be6DjmI3lU6SRDi6EL-OF5tchX0_qrffz2F6Mt_L8o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18be6DjmI3lU6SRDi6EL-OF5tchX0_qrffz2F6Mt_L8o/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "402e616f-6a9f-4fb7-bf6a-aa04aaac7693",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "vhoB8DxznMtYvIai",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $json;\n\n// 1. Fixed the key to 'full nmae' and added optional chaining (?.)\nconst cleanFull = (data['full nmae'] || \"\").trim().replace(/\\s+/g, ' ');\nconst parts = cleanFull.split(\" \");\nconst frist = parts[0] || \"\";\nconst last = parts[1] || \"\";\n\n// 2. Added optional chaining to prevent future crashes if fields are missing\nlet email = (data.email || \"\").trim().toLowerCase();\n\nconst rawAmount = data.amount;\nconst amountStr = String(rawAmount).trim().replace(/[^0-9.]/g, \"\");\nconst amount = parseFloat(amountStr) || 0;\n\nlet rawDate = data.date;\nlet message = (data.message || \"\").trim().replace(/\\s+/g, ' ');\n\n// Transformation function\nfunction cap(s) {\n  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();\n}\n\nconst fristname = cap(frist);\nconst lastname = cap(last);\nconst d = new Date(rawDate);\nconst niceDate = d.toDateString();\n\nconst subject = `Quote Request from ${fristname} - Amount ${amount}`;\nconst cleanMsg = message.charAt(0).toUpperCase() + message.slice(1);\n\nreturn { fristname, lastname, email, amount, niceDate, subject, cleanMsg };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "9142168b-0b40-4c2d-b052-8e788b5ff4ab",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "maseedumohiddin@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "=hello {{ $json.fristname }}\n{{ $json.lastname }}\nthankyou for you request\n{{ $json.niceDate }}\n{{ $json.cleanMsg }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "62befc59-fbf8-4956-a89a-118e4aec75d7",
+      "name": "Send a message",
+      "webhookId": "37ab2dc8-1aaa-4777-9362-6f8526938175",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GbH6w1tqptI5aoL1",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "79153349-ef5b-4f4c-b94c-9d10e32510e1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3919bc0c69c02398d8d4dad30091b4691768ee014b9a9328ee640f9a923ae9bf"
+  },
+  "nodeGroups": [],
+  "id": "aypdRjC1lKcuTsMc",
+  "tags": []
+}
